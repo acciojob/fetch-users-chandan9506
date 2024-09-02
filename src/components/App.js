@@ -1,74 +1,122 @@
-
-import React,{useState,useEffect} from "react";
+import React, { useEffect, useState } from "react";
 import './../styles/App.css';
+import Axios from "axios";
+import 'regenerator-runtime/runtime';
+import 'core-js/stable';
 
 
 
 const App = () => {
+  const [apiData, setApiData] = useState([]);
+  const [fetchOn, setFetchOn] = useState(false);
+  const [dataGot, setDataGot] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const [data,setData] = useState([]);
-  const [fetchUser,setFetchUser]=useState(false);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await Axios.get('https://reqres.in/api/users');
+      if (response.data.data.length === 0) {
+        setError("No data found to display.");
+      } else {
+        setApiData(response.data.data);
+        setDataGot(true);
+        setError(null); // Clear error if data is present
+      }
+    } catch (error) {
+      setError("No data found to display.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleClick = () =>{
-    setFetchUser(true);
-  }
-
-
-  useEffect(() =>{
-    if(fetchUser){
-      const fetchData = () => {
-        fetch("https://reqres.in/api/users")
-          .then(response => response.json())
-          .then(json => {
-            setData(json.data);
-          })
-          .catch(error => console.error('Error fetching data:', error));
-      };
+  useEffect(() => {
+    if (fetchOn && !dataGot) {
       fetchData();
     }
-  },[fetchUser])
-
-console.log(data);
-console.log("ram")
+  }, [fetchOn]);
 
   return (
-    <div>
-      <div style={{display:"flex",justifyContent:"space-between"}}>
-        <div>
-          <h3 style={{textDecoration:"underLine",marginTop:"0px"}}>OUTPUT</h3>
-          <p style={{marginTop:"0px"}}>Blue Whales</p>
-        </div>
-        <button style={{backgroundColor:"teal",width:"120px",height:"30px" ,}}><p style={{margin:"auto"}} onClick={handleClick}>Get User List</p></button>
-      </div>
+    <div
+      id="main"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        width: "60%",
+        margin: "auto",
+        marginTop: "50px"
+      }}
+    >
+      <nav
+        id="header"
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%"
+        }}
+      >
+        <span
+          id="title"
+          style={{
+            fontSize: "30px",
+            fontWeight: "400"
+          }}
+        >
+          Blue Whales
+        </span>
+        <button
+          className="btn"
+          style={{
+            border: "none",
+            padding: "10px",
+            margin: "0",
+            boxSizing: "border-box",
+            width: "150px",
+            color: "white",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontSize: "15px"
+          }}
+          onClick={() => setFetchOn(true)}
+        >
+          Get User List
+        </button>
+      </nav>
 
-      <table  style={{width:"100%"}}>
-        <thead >
-          <tr style={{textAlign:"center",backgroundColor:"black",color:"white",display:"flex",justifyContent:"space-around",height:"30px"}}>
-          <th style={{marginTop:"5px"}}>First Name</th>
-          <th style={{marginTop:"5px"}}>Last Name</th>
-          <th style={{marginTop:"5px"}}>Email</th>
-          <th style={{marginTop:"5px"}}>Avatar</th>
-          </tr>
-        </thead>
-        <tbody>
-        {data.map((user) => (
-            <tr key={user.id} style={{ textAlign: "center", display: "flex", justifyContent: "space-around" }}>
-              <td>{user.first_name}</td>
-              <td>{user.last_name}</td>
-              <td>{user.email}</td>
-              <td>
-                <img src={user.avatar} alt={`${user.first_name} ${user.last_name}`} style={{ width: "50px", borderRadius: "50%" }} />
-              </td>
+      {loading && <h3>Loading...</h3>}
+
+      {(
+        <table id="table">
+          <thead>
+            <tr className="tr">
+              <th className="th" id="firstName">First Name</th>
+              <th className="th" id="lastName">Last Name</th>
+              <th className="th" id="email">Email</th>
+              <th className="th" id="avatar">Avatar</th>
             </tr>
-          ))}
-
-        </tbody>
-
-      </table>
-
-     
+          {!dataGot && <tr id="noData"><td colSpan="4"><h3>{ error || "No data found"}</h3></td></tr>}
+          </thead>
+          {dataGot && !loading && (<tbody id="tbody">
+            {apiData.map((data) => (
+              <tr className="tr" key={data.id}>
+                <td className="td" id="firstName">{data.first_name}</td>
+                <td className="td" id="lastName">{data.last_name}</td>
+                <td className="td" id="email">{data.email}</td>
+                <td className="td" id="avatar">
+                  <img src={data.avatar} alt="avatar" id="image" />
+                </td>
+              </tr>
+            ))}
+          </tbody>)
+          }
+        </table>
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
